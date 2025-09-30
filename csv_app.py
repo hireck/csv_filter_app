@@ -240,7 +240,7 @@ if st.session_state.input_data: #This session state variable gets its value, whe
     description = get_description(os.path.basename(input_file)) 
     st.markdown(description)
     # display the data in streamlit and prepare the data summary for the LLM #
-    df = pd.read_csv(working_file)
+    df = pd.read_csv(os.path.join(datadir, working_file))
     st.dataframe(df, use_container_width=True)
     data_summary = '  \n'.join(['  \n'.join(info), '  \n'.join(column_info)])
     if extra_info:
