@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-import os #for accessing API keys
+import os
 import shutil
 import json
 from langchain.memory import StreamlitChatMessageHistory
@@ -15,6 +15,9 @@ from streamlit_float import *
 st.set_page_config(layout="wide")
 
 float_init(theme=True, include_unstable_primary=False) #helps with placing the box for user input
+
+if not os.path.exists('data'):
+   os.makedirs('data')
 
 
 ### The LLM ###
