@@ -52,31 +52,6 @@ class SafeCodeExecutorWithInputs:
             if pattern in code:
                 return False, f"Dangerous operation detected: {pattern}"
         return True, None 
-       
-    # def setup_input_files(self, input_files=None):
-    #     """Copy specified input files to the execution directory"""
-    #     if not input_files:
-    #         return []
-            
-    #     copied_files = []
-        
-    #     for file_path in input_files:
-    #         # Handle both absolute and relative paths
-    #         if not os.path.isabs(file_path):
-    #             source_path = os.path.join(self.input_directory, file_path)
-    #         else:
-    #             source_path = file_path
-                
-    #         if os.path.exists(source_path):
-    #             # Copy to execution directory with same name
-    #             dest_path = os.path.join(self.temp_dir, os.path.basename(source_path))
-    #             shutil.copy2(source_path, dest_path)
-    #             copied_files.append(os.path.basename(source_path))
-    #             print(f"📁 Copied input file: {os.path.basename(source_path)}")
-    #         else:
-    #             print(f"⚠️  Input file not found: {source_path}")
-                
-    #     return copied_files
     
     def setup_all_files_from_directory(self, directory_path=None):
         """Copy all files from a directory to the execution environment"""
