@@ -33,7 +33,7 @@ gpt4 = ChatOpenAI(model_name="gpt-4o", temperature=0, api_key=apikey)
 ### LLM call templates ###
 
 template = """
-You are an bot that writes python code to filter csv data, using pandas, and can answer questions about the dataset.
+You are an bot that writes python code to filter csv data, using pandas, and can answer questions about the dataset, including making plots.
 
 The dataset is provided in the following file: {filepath}
 
@@ -43,7 +43,7 @@ Here is a summary of the data:
 {data_summary}
 </summary>
 
-Write code that performs the filtering requested by the user and writes the result to a new file. 
+Write code that performs the filtering requested by the user and writes the result to a new file. If any plots are generated, make sure these are also written to files. Do not show the plots.
 CRITICAL: Always wrap code in <code language="python">...</code> HTML tags. Never leave code untagged. 
 
 
@@ -254,6 +254,8 @@ if st.session_state.input_data: #This session state variable gets its value, whe
         if msg.type == "ai" and hasattr(msg, "data_frames"):
             for df in msg.data_frames:
                  st.dataframe(df, use_container_width=True)
+            for plot in msg.plots:
+                 st.image(plot)
 
     # The user can provide input by chosing an example, or by typing in the input field #
     if len(msgs.messages) == 0 and not st.session_state.clicked2: #examples are displayed intitially to get the user started
@@ -287,12 +289,18 @@ if st.session_state.input_data: #This session state variable gets its value, whe
         if outfiles: # These are csv files. For other file types, e.g. plots, additional fuctionality is needed
             interaction['output_files'] = outfiles
             new_dfs = []
+            new_plots = []
             for fn in outfiles:
                 dest_path = os.path.join(datadir, fn)
-                df = pd.read_csv(dest_path)
-                st.dataframe(df, use_container_width=True) # display any csv files that result from running the generated code
-                new_dfs.append(df)
+                if fn.endswith('.csv'):
+                    df = pd.read_csv(dest_path)
+                    st.dataframe(df, use_container_width=True) # display any csv files that result from running the generated code
+                    new_dfs.append(df)
+                elif fn.endswith('.png') or fn.endswith('.pdf'):
+                    st.image(dest_path)
+                    new_plots.append(dest_path)
             setattr(ai_msg, 'data_frames', new_dfs) # add the resulting dataframes to the answer as a separate attribute, so they can continue to be displayed
+            setattr(ai_msg, 'plots', new_plots)
             msgs.add_message(ai_msg) 
         print('current outfiles: ', outfiles)
         # Display any errors resulting from running the code #
@@ -301,21 +309,21 @@ if st.session_state.input_data: #This session state variable gets its value, whe
             print('  \n'.join(errors))
             interaction['errors'] = errors
         # Small experiment to let the LLM comment on the output. Not very useful yet. Adding business objectives to the instructions might be good here. #
-        if outfiles:
-            info, column_info, extra_info, output_file = summarize_csv(os.path.join(datadir, outfiles[0]), datadir)
-            new_summary = '  \n'.join(['  \n'.join(info), '  \n'.join(column_info)])
-            with st.spinner('Generating insights...'):
-                try:
-                    prompt = insights_template.format(question=user_input, answer=ai_answer, original_summary=data_summary,  new_summary=new_summary)
-                    print(prompt)
-                    result = gpt4.invoke(prompt)
-                    ai_insights = result.content
-                except ValueError:
-                    ai_insights = ''
-                if ai_insights:
-                    print(ai_insights)
-                    st.chat_message("ai").write(ai_insights)
-                    interaction['ai_insights'] = ai_insights
+        # if outfiles:
+        #     info, column_info, extra_info, output_file = summarize_csv(os.path.join(datadir, outfiles[0]), datadir)
+        #     new_summary = '  \n'.join(['  \n'.join(info), '  \n'.join(column_info)])
+        #     with st.spinner('Generating insights...'):
+        #         try:
+        #             prompt = insights_template.format(question=user_input, answer=ai_answer, original_summary=data_summary,  new_summary=new_summary)
+        #             print(prompt)
+        #             result = gpt4.invoke(prompt)
+        #             ai_insights = result.content
+        #         except ValueError:
+        #             ai_insights = ''
+        #         if ai_insights:
+        #             print(ai_insights)
+        #             st.chat_message("ai").write(ai_insights)
+        #             interaction['ai_insights'] = ai_insights
         # collect data in a file for future reference #
         with jsonlines.open('interaction_data.jsonl', mode='a') as writer: 
             writer.write(interaction)
