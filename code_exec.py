@@ -138,13 +138,13 @@ with open("{temp_script}", "r") as f:
                 
                 # Check for output files (CSV, etc.)
                 temp_files = []
-                for pattern in ["*.csv"]:#, "*.txt", "*.json", "*.xlsx"]:
+                for pattern in ["*.csv", "*.png", "*.pdf"]:#, "*.txt", "*.json", "*.xlsx"]:
                     temp_files.extend(glob.glob(os.path.join(self.temp_dir, pattern)))
-                #print("output_files: ", output_files)
+                print("temp_files: ", temp_files)
                 output_files = []
                 for f in temp_files:
                     filename = os.path.basename(f)
-                    if ".to_csv('"+filename in code:
+                    if ".to_csv('"+filename in code or ".savefig('"+filename in code:
                         output_files.append(filename)
 
 
